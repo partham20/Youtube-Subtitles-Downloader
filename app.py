@@ -33,20 +33,34 @@ def download_subtitles():
     try:
         with open(file_path, 'w', encoding='utf-8') as file:
             if file_type == "SRT":
-                for i, line in enumerate(transcript, 1):
-                    start = line['start']
-                    end = start + line['duration']
-                    text = line['text']
-                    file.write(f"{i}\n")
-                    file.write(f"{format_time(start)} --> {format_time(end)}\n")
-                    file.write(f"{text}\n\n")
-            else:
-                for line in transcript:
-                    file.write(f"{line['text']}\n")
+                write_srt(file, transcript)
+            elif file_type == "TXT":
+                write_txt(file, transcript)
+            else:  # TXT (Formatted)
+                write_txt_formatted(file, transcript)
         
         messagebox.showinfo("Success", f"Subtitles saved as {file_path}")
     except Exception as e:
         messagebox.showerror("Error", f"Failed to save subtitles: {str(e)}")
+
+def write_srt(file, transcript):
+    for i, line in enumerate(transcript, 1):
+        start = line['start']
+        end = start + line['duration']
+        text = line['text']
+        file.write(f"{i}\n")
+        file.write(f"{format_time(start)} --> {format_time(end)}\n")
+        file.write(f"{text}\n\n")
+
+def write_txt(file, transcript):
+    for line in transcript:
+        file.write(f"{line['text']}\n")
+
+def write_txt_formatted(file, transcript):
+    full_text = " ".join(line['text'] for line in transcript)
+    paragraphs = re.split(r'\n{2,}', full_text)
+    for paragraph in paragraphs:
+        file.write(f"{paragraph.strip()}\n\n")
 
 def format_time(seconds):
     hours = int(seconds // 3600)
@@ -76,6 +90,9 @@ srt_radio.pack(side=tk.LEFT)
 
 txt_radio = tk.Radiobutton(file_type_frame, text="TXT", variable=file_type_var, value="TXT")
 txt_radio.pack(side=tk.LEFT)
+
+txt_formatted_radio = tk.Radiobutton(file_type_frame, text="TXT (Formatted)", variable=file_type_var, value="TXT_FORMATTED")
+txt_formatted_radio.pack(side=tk.LEFT)
 
 # Download button
 download_button = tk.Button(root, text="Download Subtitles", command=download_subtitles)
