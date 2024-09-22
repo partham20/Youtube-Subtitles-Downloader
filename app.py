@@ -2,6 +2,11 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
+import nltk
+from nltk.tokenize import sent_tokenize
+
+# Download necessary NLTK data
+nltk.download('punkt', quiet=True)
 
 def get_video_id(url):
     video_id = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*', url)
@@ -58,9 +63,17 @@ def write_txt(file, transcript):
 
 def write_txt_formatted(file, transcript):
     full_text = " ".join(line['text'] for line in transcript)
-    paragraphs = re.split(r'\n{2,}', full_text)
-    for paragraph in paragraphs:
-        file.write(f"{paragraph.strip()}\n\n")
+    sentences = sent_tokenize(full_text)
+    
+    current_paragraph = []
+    for sentence in sentences:
+        current_paragraph.append(sentence)
+        if len(current_paragraph) >= 3:  # Adjust this number to change paragraph size
+            file.write(" ".join(current_paragraph) + "\n\n")
+            current_paragraph = []
+    
+    if current_paragraph:  # Write any remaining sentences
+        file.write(" ".join(current_paragraph) + "\n")
 
 def format_time(seconds):
     hours = int(seconds // 3600)
